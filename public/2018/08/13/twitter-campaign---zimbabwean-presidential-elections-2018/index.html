@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="generator" content="Hugo 0.47" />
+
+  <title>Twitter campaign - Zimbabwean presidential elections 2018 &middot; Data stories</title>
+
+  
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/pure-min.css">
+
+  <!--[if lte IE 8]>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/grids-responsive-old-ie-min.css">
+  <![endif]-->
+  <!--[if gt IE 8]><!-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/grids-responsive-min.css">
+  <!--<![endif]-->
+
+  <!--[if lte IE 8]>
+  <link rel="stylesheet" href="/css/side-menu-old-ie.css">
+  <![endif]-->
+  <!--[if gt IE 8]><!-->
+  <link rel="stylesheet" href="/css/side-menu.css">
+  <!--<![endif]-->
+
+  <link rel="stylesheet" href="/css/blackburn.css">
+
+  
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  
+  <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet" type="text/css">
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+ 
+  
+
+  
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/androidstudio.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+  
+  <script>hljs.initHighlightingOnLoad();</script>
+  
+
+  <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
+
+  
+  
+
+</head>
+
+
+<body>
+<div id="layout">
+
+  
+<a href="#menu" id="menuLink" class="menu-link">
+  
+  <span></span>
+</a>
+<div id="menu">
+
+  
+  <a class="pure-menu-heading brand" href="/">Takwanisa</a>
+
+
+  <div class="pure-menu">
+    <ul class="pure-menu-list">
+      
+      
+        <li class="pure-menu-item">
+          <a class="pure-menu-link" href="/"><i class='fa fa-home fa-fw'></i>Home</a>
+      
+        </li>
+      
+      
+        <li class="pure-menu-item">
+          <a class="pure-menu-link" href="/post/"><i class='fa fa-list fa-fw'></i>Posts</a>
+      
+        </li>
+      
+      
+        <li class="pure-menu-item">
+          <a class="pure-menu-link" href="/about/"><i class='fa fa-user fa-fw'></i>About</a>
+      
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="pure-menu social">
+  <ul class="pure-menu-list">
+
+    
+
+    
+
+    
+    <li class="pure-menu-item">
+      <a class="pure-menu-link" href="https://twitter.com/Takwanisa" target="_blank"><i class="fa fa-twitter-square fa-fw"></i>Twitter</a>
+    </li>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <li class="pure-menu-item">
+      <a class="pure-menu-link" href="https://github.com/tmachemedze" target="_blank"><i class="fa fa-github-square fa-fw"></i>GitHub</a>
+    </li>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+  </ul>
+</div>
+
+
+  <div>
+  <div class="small-print">
+    <small>&copy; 2018. All rights reserved.</small>
+  </div>
+  <div class="small-print">
+    <small>Built with&nbsp;<a href="https://gohugo.io/" target="_blank">Hugo</a></small>
+    <small>Theme&nbsp;<a href="https://github.com/yoshiharuyamashita/blackburn" target="_blank">Blackburn</a></small>
+  </div>
+</div>
+
+</div>
+
+
+  <div id="main">
+
+
+<div class="header">
+  <h1>Twitter campaign - Zimbabwean presidential elections 2018</h1>
+  <h2></h2>
+</div>
+<div class="content">
+
+  <div class="post-meta">
+
+  <div>
+    <i class="fa fa-calendar fa-fw"></i>
+    <time>13 Aug 2018, 00:00</time>
+  </div>
+
+  
+
+  
+
+  
+
+</div>
+
+  <div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I recently attended a Summer School in Computational Social Science and found it interesting. My previous training and experience involves working with structured data such as household surveys.The summer course introduced me to text analysis among other topics.</p>
+<p>One of the common applications of text analysis is social media analysis. After seeing various blogs analysing tweets of US presidential candidates and other prominent individuals, I thought it would be interesting to adapt this to the Zimbabwean presidential candidates following the recent harmonised elections.</p>
+<p>In the Zimbabwean situation, I am only considering the two leading presidential candidates, i.e., Emmerson Dambudzo Mnangagwa (<span class="citation">@edmnangagwa</span>) of ZANU-PF and Nelson Chamisa (<span class="citation">@nelsonchamisa</span>) the leader of the main opposition party. I am particularly interested with their social media activity in the period after the change of leadership in November 2017 following the fall of former president Robert Mugabe. This happened about nine months before elections that were due in July/August 2018 (eventually held on 30 July 2018). Following events of November 2017, it was apparent that the ruling ZANU-PF has a new face on the ballot paper in nearly 40 years. This period also concides with the death of Morgan Tsvangirai (died 14 February 2018), the leading opposition figure for the past 20 years. He was also succeeded by Nelson Chamisa. Both Mnangagwa (EDM) and Chamisa (NC) are more active on twitter compared to their predecessors. The emergence of two new presidential candidates for the two main political parties provides us with an opportunity to examine their approaches to the elections through social media. Therefore, I am only considering the period 01-11-2017 to 13-08-2018.</p>
+<p>Data was downloaded from the twitter API through the R statistical package and taking the most recent 3200 tweets. Both candidates do not tweet a lot such that the 3200 limit set by the twitter API covers tweets for the period of interest.</p>
+</div>
+<div id="analysis" class="section level2">
+<h2>Analysis</h2>
+<div id="most-liked-tweets" class="section level3">
+<h3>Most liked tweets</h3>
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+Thank you Zimbabwe!<br><br>I am humbled to be elected President of the Second Republic of Zimbabwe.<br><br>Though we may have been divided at the polls, we are united in our dreams.<br><br>This is a new beginning. Let us join hands, in peace, unity &amp; love, &amp; together build a new Zimbabwe for all! <a href="https://t.co/FbdrixAktR">pic.twitter.com/FbdrixAktR</a>
+</p>
+— President of Zimbabwe (<span class="citation">@edmnangagwa</span>) <a href="https://twitter.com/edmnangagwa/status/1025155847691952129?ref_src=twsrc%5Etfw">August 2, 2018</a>
+</blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+THANK YOU ZIMBABWE …I’m humbled by the support you have given to me as a Presidential Candidate. We have won the popular vote. You voted for total Change in this past election!We have won this one together. No amount of results manipulation will alter your WILL <a href="https://twitter.com/hashtag/Godisinit?src=hash&amp;ref_src=twsrc%5Etfw">#Godisinit</a>
+</p>
+— Nelson Chamisa (<span class="citation">@nelsonchamisa</span>) <a href="https://twitter.com/nelsonchamisa/status/1024635326722174977?ref_src=twsrc%5Etfw">August 1, 2018</a>
+</blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<p>Their most liked tweets are about their proclamation of their “win” as presidential candidates.</p>
+</div>
+<div id="what-do-they-use-to-tweet" class="section level3">
+<h3>What do they use to tweet</h3>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">edmnangagwa</th>
+<th align="right">nelsonchamisa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Sprout Social</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter for Android</td>
+<td align="right">36</td>
+<td align="right">13</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter for iPhone</td>
+<td align="right">60</td>
+<td align="right">1151</td>
+</tr>
+<tr class="even">
+<td align="left">Twitter Lite</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Twitter Web Client</td>
+<td align="right">87</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">ZohoTwitterApp</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+<p>EDM generally use multiple devices/platforms (mainly Twitter for Android, Twitter for iPhone and Twitter Web Client.) whereas NC is an iPhone person.</p>
+</div>
+<div id="distribution-of-tweets" class="section level3">
+<h3>Distribution of tweets</h3>
+<p>We take a look at the monthly distribution of tweets over the period. EDM has far fewer tweets (187) compared to NC (1167).</p>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>EDM tweeted more in July 2018 building to the elections and Chamisa used twitter more in December 2017, most likely during the time when MT was not feeling well and him (NC) being prepared to lead the MDC Alliance campaign. It looks like Chamisa was tweeting less in the period immediately after the death of MT (Feb 2018) until May 2018. This is most probably because Chamisa was campaigning on the ground and had no time for social media. On the other hand EDM’s team, if we are to believe that they hired a PR company (<a href="http://www.davidcoltart.com/2018/07/its-the-junta-stupid/">see coltart</a>), doubled their efforts on social media in July. This was perhaps to sanitise their image and trying to appeal to a certain segment of the electorate other than the rural folk.</p>
+</div>
+<div id="what-hour-of-the-day-do-they-tweet" class="section level3">
+<h3>What hour of the day do they tweet?</h3>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Clearly, NC starts social media work early than EDM. There are three significant peaks of tweeting during the hours: 5am-6am, 7am-8am and 9am-10am. EDM’s team usually starts work between 7am-8am with a peak of tweets between 10am-11am.There is an interesting peak of EDM’s tweets between 4pm and 5pm, i.e. before knocking-off.</p>
+</div>
+<div id="what-did-they-tweet-mostly-about" class="section level3">
+<h3>What did they tweet mostly about?</h3>
+<div id="most-frequent-words" class="section level4">
+<h4>Most frequent words</h4>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Looking at the top 20 words used in their tweets, both have tweets to do with zimbabwe, people, time and election. As expected, Chamisa also tweets more about change and victory. EDM’s message has more to do with stability and building the economy - peace, create jobs, love, commitment, e.t.c.</p>
+</div>
+<div id="tf-idf" class="section level4">
+<h4>TF-IDF</h4>
+<p>The most frequent words above do not provide a very useful metric. Below we employ the <code>tf-idf</code> technique to extract the rare terms or most important terms used. These are the words that makes a difference in their tweets.</p>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>The top 5 important words for EDM are energy (both “energy” of supporters during campaign and investment in “energy”). He is “delighted” and “urging” people to do something in the new “era” of his leadership. Of course he is systematic as he believes in things moving in “steps”.</p>
+<p>NC’s important words include relationships as he refers to some of his followers as brothers (bro) and is cheerful as he expresses his laughter (lol). He warned (don’t) and saw “victory” in the presidential elections “coming”.</p>
+</div>
+</div>
+<div id="hashtag-analysis" class="section level3">
+<h3>Hashtag analysis</h3>
+<p>Top 10 hashtags</p>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>For EDM, #100daysofaction was the most popular (used 3 times) whereas NC had a religious tone (#godisinit used nearly fourty times). NC’s hashtags are more creative compared to EDM’s generic and international events.</p>
+</div>
+<div id="retweet-analysis" class="section level3">
+<h3>Retweet analysis</h3>
+<div id="whose-tweets-have-the-candidates-retweeted-the-most" class="section level4">
+<h4>Whose tweets have the candidates retweeted the most?</h4>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>EDM retweets mostly from the ZBCNewsonline (the national broadcaster) and the US Embassy in Harare. NC retweets mostly from individuals - stacy_nyathi and MakomboreroH, and from the official opposition party handle (mdczimbabwe). It is notable that EDM does not retweet from the official ZANU-PF handle, but prominent individuals and international organizations. One possible explanation is that his team try to amplify any positive message of potential relationships with significant institutions.</p>
+</div>
+</div>
+<div id="sentiment-analysis" class="section level3">
+<h3>Sentiment analysis</h3>
+<p>For sentiment analysis, two lexicons were used. The first one is the <code>bing</code> lexicon that categorize words into positive and negative categories, and the <code>nrc</code> lexicon that categorizes words into emotions of positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, and trust.</p>
+<div id="bing" class="section level4">
+<h4>Bing</h4>
+<p>The graph below shows the proportion of the sentiments after using the <code>bing</code> dictionary that categorizes words as either positive or negative, correcting for negated words like “not happy” as negative.</p>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>EDM expresses more positive sentiment (over 80% of words used) compared to NC (just under 60%).</p>
+</div>
+<div id="nrc" class="section level4">
+<h4>nrc</h4>
+<p>Figure below shows the alternative sentiment analysis using the nrc lexicon that categories words into emotions.</p>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>For both candidates, there is relatively more expression of joy, trust and anticipation where this is more for EDM compared to NC. Conversely, EDM expresses less sadness, anger, fear, disgust than NC.However, EDM expresses more suprise than NC.</p>
+</div>
+</div>
+</div>
+<div id="how-did-the-sentiment-change-over-time" class="section level2">
+<h2>How did the sentiment change over time?</h2>
+<div id="within-individual" class="section level4">
+<h4>Within individual</h4>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>Generally, they both express positive sentiments (more positive than negative).</p>
+</div>
+<div id="between-individuals" class="section level4">
+<h4>Between individuals</h4>
+<p><img src="/post/2018-08-13-nel_edm_final_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>Generally, ED is less negative in his tweets relative to Chamisa. For both candidates, there is no increasing trend of negative sentiments towards election time.</p>
+</div>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>NC’s most frequent words, retweets, hashtags and sentiments appear to be real expressions of his feelings and emotions. EDM’s tweets have a more structured message. Other than that he is the president, older and perhaps more mature, his tweets also appear to support the argument that he uses a PR company to enhance his image. It would be interesting to analyse their off the cuff campaign messages and compare with their tweets.</p>
+</div>
+
+
+  
+<div class="prev-next-post pure-g">
+  <div class="pure-u-1-24" style="text-align: left;">
+    
+    <a href="/2017/03/24/stata-to-r---bmi-example/"><i class="fa fa-chevron-left"></i></a>
+    
+  </div>
+  <div class="pure-u-10-24">
+    
+    <nav class="prev">
+      <a href="/2017/03/24/stata-to-r---bmi-example/">Stata to R - BMI example</a>
+    </nav>
+    
+  </div>
+  <div class="pure-u-2-24">
+    &nbsp;
+  </div>
+  <div class="pure-u-10-24">
+    
+    <nav class="next">
+      <a href="/2018/08/23/zim-elections-constitutional-court-hearing-in-tweets/">Zim Elections Constitutional Court Hearing in Tweets</a>
+    </nav>
+    
+  </div>
+  <div class="pure-u-1-24" style="text-align: right;">
+    
+    <a href="/2018/08/23/zim-elections-constitutional-court-hearing-in-tweets/"><i class="fa fa-chevron-right"></i></a>
+    
+  </div>
+</div>
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://larnsce.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+</div>
+
+</div>
+</div>
+<script src="/js/ui.js"></script>
+
+
+
+
+
+
+</body>
+</html>
+
