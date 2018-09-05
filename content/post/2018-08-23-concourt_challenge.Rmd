@@ -1,5 +1,5 @@
 ---
-title: "Zim Elections Constitutional Court Hearing in Tweets"
+title: "Zimbabwean elections  - Constitutional court hearing in tweets"
 author: "TM"
 date: "2018-08-23"
 output:
