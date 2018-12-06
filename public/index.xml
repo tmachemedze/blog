@@ -7,18 +7,18 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018. All rights reserved.</copyright>
-    <lastBuildDate>Thu, 23 Aug 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 06 Dec 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Zimbabwean elections  - Constitutional court hearing in tweets</title>
-      <link>/2018/08/23/zimbabwean-elections----constitutional-court-hearing-in-tweets/</link>
-      <pubDate>Thu, 23 Aug 2018 00:00:00 +0000</pubDate>
+      <title>Reapportion spatial overlaps between South African census boundaries: 2001 and 2011</title>
+      <link>/2018/12/06/reapportion-spatial-overlaps-between-south-african-census-boundaries-2001-and-2011/</link>
+      <pubDate>Thu, 06 Dec 2018 00:00:00 +0000</pubDate>
       
-      <guid>/2018/08/23/zimbabwean-elections----constitutional-court-hearing-in-tweets/</guid>
-      <description>IntroductionHarmonised elections recently held in Zimbabwe (30/07/2018) were disputed by the leading opposition party, MDC-Alliance. Therefore, they petitioned the Constitional Court to overturn President Emmerson Mnangagwa’s victory as announced by the electoral board, Zimbabwe Electoral Commission (ZEC). The Constitutional court hearing was on 22 Agust 2018 and was trending by the twitter hashtags; #ConCourtdecides, #ConCourtZW, #ElectionPetitionZW, #ZimConCourt, #zimconcourtchallenge. The court ruling was also set for the 24th of August 2018.</description>
+      <guid>/2018/12/06/reapportion-spatial-overlaps-between-south-african-census-boundaries-2001-and-2011/</guid>
+      <description>IntroductionThe documents accompanying the South African census of 2011 state that demarcations of geographical boundaries underwent a number of changes at provincial and municipal boundaries relative to those used for the 2001 census. This make it difficult to compare the 2011 census and the preceding census at this level. The aim of this exercise is to determine what proportion of the preceding census boundaries are included in the boundaries of the latest census.</description>
     </item>
     
     <item>
@@ -31,16 +31,6 @@
     </item>
     
     <item>
-      <title>Twitter campaign - Zimbabwean presidential elections 2018</title>
-      <link>/2018/08/13/twitter-campaign---zimbabwean-presidential-elections-2018/</link>
-      <pubDate>Mon, 13 Aug 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/2018/08/13/twitter-campaign---zimbabwean-presidential-elections-2018/</guid>
-      <description>IntroductionI recently attended a Summer School in Computational Social Science and found it interesting. My previous training and experience involves working with structured data such as household surveys.The summer course introduced me to text analysis among other topics.
-One of the common applications of text analysis is social media analysis. After seeing various blogs analysing tweets of US presidential candidates and other prominent individuals, I thought it would be interesting to adapt this to the Zimbabwean presidential candidates following the recent harmonised elections.</description>
-    </item>
-    
-    <item>
       <title>Stata to R - BMI example</title>
       <link>/2017/03/24/stata-to-r---bmi-example/</link>
       <pubDate>Fri, 24 Mar 2017 00:00:00 +0000</pubDate>
@@ -48,6 +38,15 @@ One of the common applications of text analysis is social media analysis. After 
       <guid>/2017/03/24/stata-to-r---bmi-example/</guid>
       <description>Note: This exercise is part of re-writing the SALDRU Stata course in R for DataFirst.Therefore, all descriptions, interpretation and logical approach comes from the original course and all I did is to write the R code.
 IntroductionIn this exercise, we follow the BMI examples in the SALDRU Stata course. The exercise investigate determinants of BMI and in doing so address the following questions. What happens to your BMI as you get older?</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/1/01/01/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/1/01/01/</guid>
+      <description>Provincecode{white-space: pre;}pre:not([class]) {background-color: white;}if (window.hljs) {hljs.configure({languages: []});hljs.initHighlightingOnLoad();if (document.readyState &amp;&amp; document.readyState === &#34;complete&#34;) {window.setTimeout(function() { hljs.initHighlighting(); }, 0);}}h1 {font-size: 34px;}h1.title {font-size: 38px;}h2 {font-size: 30px;}h3 {font-size: 24px;}h4 {font-size: 18px;}h5 {font-size: 16px;}h6 {font-size: 12px;}.</description>
     </item>
     
   </channel>

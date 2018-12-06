@@ -1,0 +1,1840 @@
+---
+title: "Reapportion spatial overlaps between South African census boundaries: 2001 and 2011"
+author: "Takwanisa Machemedze"
+date: "2018-12-06"
+output:
+  blogdown::html_page
+---
+
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The <a href="https://www.statssa.gov.za/publications/P03014/P030142011.pdf">documents</a> accompanying the South African census of 2011 state that demarcations of geographical boundaries underwent a number of changes at provincial and municipal boundaries relative to those used for the 2001 census. This make it difficult to compare the 2011 census and the preceding census at this level. The aim of this exercise is to determine what proportion of the preceding census boundaries are included in the boundaries of the latest census. We can then try to apportion a number of measures from previous census into the new boundaries. In this exercise we use the R statistical package and various add-on packages to derive the proportions. In our case, we use the <code>sf</code> package but most of the ideas are derived from <a href="http://rstudio-pubs-static.s3.amazonaws.com/6577_3b66f8d8f4984fb2807e91224defa854.html">this</a> source that uses the classic approach of the combination of the <code>sp</code>, <code>rgdal</code> and <code>rgeos</code> packages.</p>
+</div>
+<div id="relevant-packages" class="section level2">
+<h2>Relevant packages</h2>
+<p>We use the recently developed <code>sf</code> package that combines the capabilities of the <code>sp\rgdal\rgeos</code> combination. Among other things, the <code>sf</code> package read and write spatial data, provides analysis tools (overlays, etc.) and geometry operations (union, intersections, buffer, etc). <code>sf</code> objects also integrates well within the <code>tidyverse</code> workflow.</p>
+</div>
+<div id="load-packages-and-read-polygons" class="section level2">
+<h2>Load packages and read polygons</h2>
+<pre class="r"><code>library(sf)
+library(tidyverse)
+#Read in old (2001) and new (2011) geographies
+shp01&lt;-st_read(dsn=&quot;./PR_SA_2001&quot;, layer=&quot;PR_SA&quot;, quiet = TRUE)
+shp11&lt;-st_read(dsn=&quot;./PR_SA_2011&quot;, layer=&quot;PR_SA_2011&quot;, quiet = TRUE)</code></pre>
+</div>
+<div id="sanity-check-on-coordinate-reference-systems" class="section level2">
+<h2>Sanity check on coordinate reference systems</h2>
+<div id="test-whether-or-not-data-is-projected" class="section level3">
+<h3>Test whether or not data is projected</h3>
+<pre class="r"><code>st_is_longlat(shp01)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>st_is_longlat(shp11)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p>Both polygons are not projected, i.e. they are still in longitude/latitude.</p>
+</div>
+<div id="retrieve-projection-information" class="section level3">
+<h3>Retrieve projection information</h3>
+<pre class="r"><code>st_crs(shp01)</code></pre>
+<pre><code>## Coordinate Reference System:
+##   No EPSG code
+##   proj4string: &quot;+proj=longlat +ellps=WGS84 +no_defs&quot;</code></pre>
+<pre class="r"><code>st_crs(shp11)</code></pre>
+<pre><code>## Coordinate Reference System:
+##   EPSG: 4326 
+##   proj4string: &quot;+proj=longlat +datum=WGS84 +no_defs&quot;</code></pre>
+</div>
+<div id="projection-using-a-proj.4-string" class="section level3">
+<h3>Projection using a proj.4 string</h3>
+<p>Here, we use the <a href="https://gist.github.com/gubuntu/6403425">projection</a> for South Africa as suggested by Tim Sutton and Gavin Fleming.</p>
+<pre class="r"><code>pro_tm&lt;-&quot;+proj=aea +lat_1=-24 +lat_2=-32 +lat_0=0 +lon_0=24 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs&quot;
+shp01&lt;-st_transform(shp01,pro_tm)
+shp11&lt;-st_transform(shp11,pro_tm)
+
+st_crs(shp01)</code></pre>
+<pre><code>## Coordinate Reference System:
+##   No EPSG code
+##   proj4string: &quot;+proj=aea +lat_1=-24 +lat_2=-32 +lat_0=0 +lon_0=24 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs&quot;</code></pre>
+<pre class="r"><code>st_crs(shp11)</code></pre>
+<pre><code>## Coordinate Reference System:
+##   No EPSG code
+##   proj4string: &quot;+proj=aea +lat_1=-24 +lat_2=-32 +lat_0=0 +lon_0=24 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs&quot;</code></pre>
+</div>
+</div>
+<div id="visualise-the-two-polygons" class="section level2">
+<h2>Visualise the two polygons</h2>
+<pre class="r"><code># Create centroid 
+shp11 &lt;- cbind(shp11, st_coordinates(st_centroid(shp11)))</code></pre>
+<pre><code>## Warning in st_centroid.sf(shp11): st_centroid assumes attributes are
+## constant over geometries of x</code></pre>
+<pre class="r"><code>#Plot
+ggplot() + 
+  geom_sf(data = shp01, aes(colour = &quot;Old boundary&quot;), show.legend = &quot;line&quot;, fill=NA) +
+  geom_sf(data = shp11, aes(colour = &quot;New boundary&quot;), show.legend = &quot;line&quot;, fill=NA) +
+  geom_text(data = shp11, aes(X, Y, label = PR_MDB_C), size = 3) +
+  scale_colour_manual(values = c(&quot;Old boundary&quot; = &quot;black&quot;, &quot;New boundary&quot; = &quot;red&quot;), name = NULL,
+                      guide = guide_legend(override.aes = list(linetype = c(&quot;solid&quot;, &quot;solid&quot;), 
+                                                               shape = c(NA, NA)))) +
+  labs(x=&quot;&quot;,y=&quot;&quot;)+
+  theme_minimal()+
+  theme(legend.position=&quot;bottom&quot;)</code></pre>
+<p><img src="/post/2018-12-06-sf_pr_reapportion_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>We can clearly see some of the overlaps.</p>
+</div>
+<div id="some-house-keeping" class="section level2">
+<h2>Some house keeping</h2>
+<p>Here I want to add the province abbreviation to the 2001 attributes table to match the PR_MDB_C in 2011 as shown below.</p>
+<pre class="r"><code>#check the attributes table
+as.data.frame(shp01) %&gt;% head</code></pre>
+<pre><code>##   OBJECTID PR_CODE       PR_NAME SHAPE_AREA SHAPE_LEN
+## 1        1       1  WESTERN CAPE          0         0
+## 2        2       2  EASTERN CAPE          0         0
+## 3        3       3 NORTHERN CAPE          0         0
+## 4        4       4    FREE STATE          0         0
+## 5        5       5 KWAZULU-NATAL          0         0
+## 6        6       6    NORTH WEST          0         0
+##                         geometry
+## 1 MULTIPOLYGON (((-594408.1 -...
+## 2 MULTIPOLYGON (((140451.6 -3...
+## 3 MULTIPOLYGON (((-594408.1 -...
+## 4 MULTIPOLYGON (((356465.9 -2...
+## 5 MULTIPOLYGON (((600555.3 -3...
+## 6 MULTIPOLYGON (((356465.9 -2...</code></pre>
+<pre class="r"><code>as.data.frame(shp11) %&gt;% head</code></pre>
+<pre><code>##   PR_MDB_C PR_CODE PR_CODE_st       PR_NAME ALBERS_ARE SHAPE_Leng
+## 1       EC       2          2  Eastern Cape  168965.97   28.20638
+## 2       FS       4          4    Free State  129825.16   24.24960
+## 3       GT       7          7       Gauteng   18178.31   10.96706
+## 4      KZN       5          5 KwaZulu-Natal   94361.32   19.02478
+## 5      LIM       9          9       Limpopo  125753.97   21.85956
+## 6       MP       8          8    Mpumalanga   76494.69   23.65078
+##   SHAPE_Area        X        Y                       geometry
+## 1  16.154667 232675.5 -3465721 MULTIPOLYGON (((483488 -323...
+## 2  11.979428 280962.1 -3073399 MULTIPOLYGON (((394969 -286...
+## 3   1.640382 411972.1 -2798768 MULTIPOLYGON (((479101.9 -2...
+## 4   8.715379 658493.9 -3099351 MULTIPOLYGON (((623414.4 -3...
+## 5  11.141413 539587.0 -2546426 MULTIPOLYGON (((584807.7 -2...
+## 6   6.889972 630680.2 -2782108 MULTIPOLYGON (((794101.1 -2...</code></pre>
+<p>Add new variable to <code>shp01</code></p>
+<pre class="r"><code>#Add the province abbreviation to the 2001 census attributes table
+shp01$PR_MDB_C[shp01$PR_NAME==&quot;EASTERN CAPE&quot;]&lt;-&quot;EC&quot;
+shp01$PR_MDB_C[shp01$PR_NAME==&quot;FREE STATE&quot;]&lt;-&quot;FS&quot;
+shp01$PR_MDB_C[shp01$PR_NAME==&quot;GAUTENG&quot;]&lt;-&quot;GT&quot;
+shp01$PR_MDB_C[shp01$PR_NAME==&quot;KWAZULU-NATAL&quot;]&lt;-&quot;KZN&quot;
+shp01$PR_MDB_C[shp01$PR_NAME==&quot;LIMPOPO&quot;]&lt;-&quot;LIM&quot;
+shp01$PR_MDB_C[shp01$PR_NAME==&quot;MPUMALANGA&quot;]&lt;-&quot;MP&quot;
+shp01$PR_MDB_C[shp01$PR_NAME==&quot;NORTH WEST&quot;]&lt;-&quot;NW&quot;
+shp01$PR_MDB_C[shp01$PR_NAME==&quot;NORTHERN CAPE&quot;]&lt;-&quot;NC&quot;
+shp01$PR_MDB_C[shp01$PR_NAME==&quot;WESTERN CAPE&quot;]&lt;-&quot;WC&quot;</code></pre>
+<div id="area-in-square-km" class="section level3">
+<h3>Area in square km</h3>
+<pre class="r"><code>#Area
+shp01$area_2001 &lt;-as.numeric(st_area(shp01))/1e6
+shp11$area_2011 &lt;-as.numeric(st_area(shp11))/1e6
+
+#compare 2001 and 2011 side by side
+a01&lt;-as.data.frame(shp01) %&gt;% 
+  select(PR_MDB_C,area_2001)
+
+a11&lt;-as.data.frame(shp11) %&gt;% 
+  select(PR_MDB_C,area_2011) %&gt;% 
+  mutate_if(is.factor, as.character)
+
+a01 %&gt;% 
+  inner_join(a11) %&gt;% head(9)</code></pre>
+<pre><code>##   PR_MDB_C area_2001 area_2011
+## 1       WC 129449.48 129462.19
+## 2       EC 169954.14 168965.97
+## 3       NC 362599.28 372889.41
+## 4       FS 129824.31 129825.16
+## 5      KZN  92305.37  94361.32
+## 6       NW 116230.68 104881.68
+## 7       GT  16936.45  18178.31
+## 8       MP  79486.64  76494.68
+## 9      LIM 122816.02 125753.91</code></pre>
+<p>This matches Table 2.1 <a href="https://www.statssa.gov.za/publications/P03014/P030142011.pdf">here</a></p>
+</div>
+</div>
+<div id="overlapping-area" class="section level2">
+<h2>Overlapping area</h2>
+<p>Here we create a new object, <code>overlaps</code>, with IDs and size of overlapping areas.</p>
+<pre class="r"><code>overlaps &lt;- st_intersection(shp11,shp01)
+#overlapping area
+overlaps$area_i &lt;-as.numeric(st_area(overlaps))/1e6</code></pre>
+<pre class="r"><code>#sf object to polygon
+st_geometry(overlaps) &lt;- NULL
+#overlap as a proportion of the old area
+overlaps$old_area_share&lt;-overlaps$area_i/overlaps$area_2001</code></pre>
+<div id="check-if-sum-of-proportions-add-up-to-one" class="section level3">
+<h3>Check if sum of proportions add up to one</h3>
+<pre class="r"><code>library(knitr)
+library(kableExtra)</code></pre>
+<pre><code>## Warning: package &#39;kableExtra&#39; was built under R version 3.5.1</code></pre>
+<pre class="r"><code>overlaps %&gt;% 
+  group_by(PR_NAME.1) %&gt;% 
+  mutate(sum_old_area_shares = sum(old_area_share)) %&gt;% 
+  summarise(area_sum=max(sum_old_area_shares)) %&gt;% 
+  kable(.) %&gt;%
+  kable_styling(&quot;striped&quot;, full_width = T)</code></pre>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+PR_NAME.1
+</th>
+<th style="text-align:right;">
+area_sum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+EASTERN CAPE
+</td>
+<td style="text-align:right;">
+0.9999131
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+FREE STATE
+</td>
+<td style="text-align:right;">
+0.9999263
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+GAUTENG
+</td>
+<td style="text-align:right;">
+1.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+KWAZULU-NATAL
+</td>
+<td style="text-align:right;">
+0.9997645
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LIMPOPO
+</td>
+<td style="text-align:right;">
+0.9998606
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MPUMALANGA
+</td>
+<td style="text-align:right;">
+0.9999827
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NORTH WEST
+</td>
+<td style="text-align:right;">
+0.9999210
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NORTHERN CAPE
+</td>
+<td style="text-align:right;">
+0.9999471
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+WESTERN CAPE
+</td>
+<td style="text-align:right;">
+0.9997599
+</td>
+</tr>
+</tbody>
+</table>
+<p>Clearly, most of the proportions are not exactly one. We can rescale them to sum to one as follows:</p>
+</div>
+<div id="rescale-the-old_area_share-for-each-overlap-by-1sum_old_area_shares" class="section level3">
+<h3>Rescale the old_area_share for each overlap by 1/sum_old_area_shares</h3>
+<pre class="r"><code>overlaps&lt;-overlaps %&gt;% 
+  group_by(PR_NAME.1) %&gt;% 
+  mutate(sum_old_area_shares = sum(old_area_share)) %&gt;% 
+  ungroup() %&gt;% 
+  mutate(old_area_share_r = old_area_share/sum_old_area_shares)</code></pre>
+<p>Below is a table with province code, intersect area (area_i) and both raw and re-scaled proportions of intersect.</p>
+<pre class="r"><code>new_df&lt;-overlaps %&gt;% 
+  select(PR_CODE01=PR_CODE.1, PR_CODE11=PR_CODE, PR_NAME01=PR_MDB_C.1, PR_NAME11 = PR_MDB_C,area_2001,
+         area_2011, area_i, old_area_share,old_area_share_r) %&gt;% 
+  mutate(area_i=round(area_i,2), old_area_share=round(old_area_share,5), 
+         old_area_share_r=round(old_area_share_r,5)) %&gt;% 
+  arrange(PR_NAME11)
+
+
+library(knitr)
+library(kableExtra)
+library(tidyverse)
+new_df %&gt;%
+  kable(.) %&gt;%
+  kable_styling(&quot;striped&quot;, full_width = T)</code></pre>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+PR_CODE01
+</th>
+<th style="text-align:right;">
+PR_CODE11
+</th>
+<th style="text-align:left;">
+PR_NAME01
+</th>
+<th style="text-align:left;">
+PR_NAME11
+</th>
+<th style="text-align:right;">
+area_2001
+</th>
+<th style="text-align:right;">
+area_2011
+</th>
+<th style="text-align:right;">
+area_i
+</th>
+<th style="text-align:right;">
+old_area_share
+</th>
+<th style="text-align:right;">
+old_area_share_r
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+WC
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:right;">
+129449.48
+</td>
+<td style="text-align:right;">
+168965.97
+</td>
+<td style="text-align:right;">
+1.04
+</td>
+<td style="text-align:right;">
+0.00001
+</td>
+<td style="text-align:right;">
+0.00001
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:right;">
+169954.14
+</td>
+<td style="text-align:right;">
+168965.97
+</td>
+<td style="text-align:right;">
+167483.56
+</td>
+<td style="text-align:right;">
+0.98546
+</td>
+<td style="text-align:right;">
+0.98555
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:right;">
+362599.28
+</td>
+<td style="text-align:right;">
+168965.97
+</td>
+<td style="text-align:right;">
+0.64
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:right;">
+129824.31
+</td>
+<td style="text-align:right;">
+168965.97
+</td>
+<td style="text-align:right;">
+7.80
+</td>
+<td style="text-align:right;">
+0.00006
+</td>
+<td style="text-align:right;">
+0.00006
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+KZN
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:right;">
+92305.37
+</td>
+<td style="text-align:right;">
+168965.97
+</td>
+<td style="text-align:right;">
+1422.67
+</td>
+<td style="text-align:right;">
+0.01541
+</td>
+<td style="text-align:right;">
+0.01542
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:right;">
+169954.14
+</td>
+<td style="text-align:right;">
+129825.16
+</td>
+<td style="text-align:right;">
+10.53
+</td>
+<td style="text-align:right;">
+0.00006
+</td>
+<td style="text-align:right;">
+0.00006
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:right;">
+362599.28
+</td>
+<td style="text-align:right;">
+129825.16
+</td>
+<td style="text-align:right;">
+2.86
+</td>
+<td style="text-align:right;">
+0.00001
+</td>
+<td style="text-align:right;">
+0.00001
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:right;">
+129824.31
+</td>
+<td style="text-align:right;">
+129825.16
+</td>
+<td style="text-align:right;">
+129787.69
+</td>
+<td style="text-align:right;">
+0.99972
+</td>
+<td style="text-align:right;">
+0.99979
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+KZN
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:right;">
+92305.37
+</td>
+<td style="text-align:right;">
+129825.16
+</td>
+<td style="text-align:right;">
+2.77
+</td>
+<td style="text-align:right;">
+0.00003
+</td>
+<td style="text-align:right;">
+0.00003
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:right;">
+116230.68
+</td>
+<td style="text-align:right;">
+129825.16
+</td>
+<td style="text-align:right;">
+7.31
+</td>
+<td style="text-align:right;">
+0.00006
+</td>
+<td style="text-align:right;">
+0.00006
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:right;">
+16936.45
+</td>
+<td style="text-align:right;">
+129825.16
+</td>
+<td style="text-align:right;">
+3.77
+</td>
+<td style="text-align:right;">
+0.00022
+</td>
+<td style="text-align:right;">
+0.00022
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:right;">
+79486.64
+</td>
+<td style="text-align:right;">
+129825.16
+</td>
+<td style="text-align:right;">
+6.34
+</td>
+<td style="text-align:right;">
+0.00008
+</td>
+<td style="text-align:right;">
+0.00008
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:right;">
+129824.31
+</td>
+<td style="text-align:right;">
+18178.31
+</td>
+<td style="text-align:right;">
+2.09
+</td>
+<td style="text-align:right;">
+0.00002
+</td>
+<td style="text-align:right;">
+0.00002
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:right;">
+116230.68
+</td>
+<td style="text-align:right;">
+18178.31
+</td>
+<td style="text-align:right;">
+1133.62
+</td>
+<td style="text-align:right;">
+0.00975
+</td>
+<td style="text-align:right;">
+0.00975
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:right;">
+16936.45
+</td>
+<td style="text-align:right;">
+18178.31
+</td>
+<td style="text-align:right;">
+16920.90
+</td>
+<td style="text-align:right;">
+0.99908
+</td>
+<td style="text-align:right;">
+0.99908
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:right;">
+79486.64
+</td>
+<td style="text-align:right;">
+18178.31
+</td>
+<td style="text-align:right;">
+121.35
+</td>
+<td style="text-align:right;">
+0.00153
+</td>
+<td style="text-align:right;">
+0.00153
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+LIM
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:right;">
+122816.02
+</td>
+<td style="text-align:right;">
+18178.31
+</td>
+<td style="text-align:right;">
+0.34
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:left;">
+KZN
+</td>
+<td style="text-align:right;">
+169954.14
+</td>
+<td style="text-align:right;">
+94361.32
+</td>
+<td style="text-align:right;">
+2439.09
+</td>
+<td style="text-align:right;">
+0.01435
+</td>
+<td style="text-align:right;">
+0.01435
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:left;">
+KZN
+</td>
+<td style="text-align:right;">
+129824.31
+</td>
+<td style="text-align:right;">
+94361.32
+</td>
+<td style="text-align:right;">
+0.20
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+KZN
+</td>
+<td style="text-align:left;">
+KZN
+</td>
+<td style="text-align:right;">
+92305.37
+</td>
+<td style="text-align:right;">
+94361.32
+</td>
+<td style="text-align:right;">
+90856.83
+</td>
+<td style="text-align:right;">
+0.98431
+</td>
+<td style="text-align:right;">
+0.98454
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:left;">
+KZN
+</td>
+<td style="text-align:right;">
+79486.64
+</td>
+<td style="text-align:right;">
+94361.32
+</td>
+<td style="text-align:right;">
+3.11
+</td>
+<td style="text-align:right;">
+0.00004
+</td>
+<td style="text-align:right;">
+0.00004
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:left;">
+LIM
+</td>
+<td style="text-align:right;">
+116230.68
+</td>
+<td style="text-align:right;">
+125753.91
+</td>
+<td style="text-align:right;">
+71.60
+</td>
+<td style="text-align:right;">
+0.00062
+</td>
+<td style="text-align:right;">
+0.00062
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:left;">
+LIM
+</td>
+<td style="text-align:right;">
+16936.45
+</td>
+<td style="text-align:right;">
+125753.91
+</td>
+<td style="text-align:right;">
+0.38
+</td>
+<td style="text-align:right;">
+0.00002
+</td>
+<td style="text-align:right;">
+0.00002
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:left;">
+LIM
+</td>
+<td style="text-align:right;">
+79486.64
+</td>
+<td style="text-align:right;">
+125753.91
+</td>
+<td style="text-align:right;">
+6609.48
+</td>
+<td style="text-align:right;">
+0.08315
+</td>
+<td style="text-align:right;">
+0.08315
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+LIM
+</td>
+<td style="text-align:left;">
+LIM
+</td>
+<td style="text-align:right;">
+122816.02
+</td>
+<td style="text-align:right;">
+125753.91
+</td>
+<td style="text-align:right;">
+119053.02
+</td>
+<td style="text-align:right;">
+0.96936
+</td>
+<td style="text-align:right;">
+0.96950
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:right;">
+129824.31
+</td>
+<td style="text-align:right;">
+76494.68
+</td>
+<td style="text-align:right;">
+7.02
+</td>
+<td style="text-align:right;">
+0.00005
+</td>
+<td style="text-align:right;">
+0.00005
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+KZN
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:right;">
+92305.37
+</td>
+<td style="text-align:right;">
+76494.68
+</td>
+<td style="text-align:right;">
+1.36
+</td>
+<td style="text-align:right;">
+0.00001
+</td>
+<td style="text-align:right;">
+0.00001
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:right;">
+16936.45
+</td>
+<td style="text-align:right;">
+76494.68
+</td>
+<td style="text-align:right;">
+10.53
+</td>
+<td style="text-align:right;">
+0.00062
+</td>
+<td style="text-align:right;">
+0.00062
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:right;">
+79486.64
+</td>
+<td style="text-align:right;">
+76494.68
+</td>
+<td style="text-align:right;">
+72744.97
+</td>
+<td style="text-align:right;">
+0.91518
+</td>
+<td style="text-align:right;">
+0.91520
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+LIM
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:right;">
+122816.02
+</td>
+<td style="text-align:right;">
+76494.68
+</td>
+<td style="text-align:right;">
+3729.09
+</td>
+<td style="text-align:right;">
+0.03036
+</td>
+<td style="text-align:right;">
+0.03037
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+WC
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:right;">
+129449.48
+</td>
+<td style="text-align:right;">
+372889.41
+</td>
+<td style="text-align:right;">
+11.41
+</td>
+<td style="text-align:right;">
+0.00009
+</td>
+<td style="text-align:right;">
+0.00009
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:right;">
+169954.14
+</td>
+<td style="text-align:right;">
+372889.41
+</td>
+<td style="text-align:right;">
+0.42
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:right;">
+362599.28
+</td>
+<td style="text-align:right;">
+372889.41
+</td>
+<td style="text-align:right;">
+362564.45
+</td>
+<td style="text-align:right;">
+0.99990
+</td>
+<td style="text-align:right;">
+0.99996
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:right;">
+129824.31
+</td>
+<td style="text-align:right;">
+372889.41
+</td>
+<td style="text-align:right;">
+4.53
+</td>
+<td style="text-align:right;">
+0.00003
+</td>
+<td style="text-align:right;">
+0.00003
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:right;">
+116230.68
+</td>
+<td style="text-align:right;">
+372889.41
+</td>
+<td style="text-align:right;">
+10185.85
+</td>
+<td style="text-align:right;">
+0.08763
+</td>
+<td style="text-align:right;">
+0.08764
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:right;">
+362599.28
+</td>
+<td style="text-align:right;">
+104881.68
+</td>
+<td style="text-align:right;">
+3.86
+</td>
+<td style="text-align:right;">
+0.00001
+</td>
+<td style="text-align:right;">
+0.00001
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+FS
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:right;">
+129824.31
+</td>
+<td style="text-align:right;">
+104881.68
+</td>
+<td style="text-align:right;">
+5.41
+</td>
+<td style="text-align:right;">
+0.00004
+</td>
+<td style="text-align:right;">
+0.00004
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:right;">
+116230.68
+</td>
+<td style="text-align:right;">
+104881.68
+</td>
+<td style="text-align:right;">
+104823.11
+</td>
+<td style="text-align:right;">
+0.90185
+</td>
+<td style="text-align:right;">
+0.90193
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+GT
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:right;">
+16936.45
+</td>
+<td style="text-align:right;">
+104881.68
+</td>
+<td style="text-align:right;">
+0.87
+</td>
+<td style="text-align:right;">
+0.00005
+</td>
+<td style="text-align:right;">
+0.00005
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+LIM
+</td>
+<td style="text-align:left;">
+NW
+</td>
+<td style="text-align:right;">
+122816.02
+</td>
+<td style="text-align:right;">
+104881.68
+</td>
+<td style="text-align:right;">
+16.46
+</td>
+<td style="text-align:right;">
+0.00013
+</td>
+<td style="text-align:right;">
+0.00013
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+WC
+</td>
+<td style="text-align:left;">
+WC
+</td>
+<td style="text-align:right;">
+129449.48
+</td>
+<td style="text-align:right;">
+129462.19
+</td>
+<td style="text-align:right;">
+129405.95
+</td>
+<td style="text-align:right;">
+0.99966
+</td>
+<td style="text-align:right;">
+0.99990
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+EC
+</td>
+<td style="text-align:left;">
+WC
+</td>
+<td style="text-align:right;">
+169954.14
+</td>
+<td style="text-align:right;">
+129462.19
+</td>
+<td style="text-align:right;">
+5.76
+</td>
+<td style="text-align:right;">
+0.00003
+</td>
+<td style="text-align:right;">
+0.00003
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+NC
+</td>
+<td style="text-align:left;">
+WC
+</td>
+<td style="text-align:right;">
+362599.28
+</td>
+<td style="text-align:right;">
+129462.19
+</td>
+<td style="text-align:right;">
+8.29
+</td>
+<td style="text-align:right;">
+0.00002
+</td>
+<td style="text-align:right;">
+0.00002
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="reapportion" class="section level2">
+<h2>Reapportion</h2>
+<p>Below, we reapportion the 2001 provincial population based on the proportions derived above. The apportion assume a spatial uniform distribution of the population and can be expressed as follows:</p>
+<p><span class="math inline">\(\hat y_t = \sum \frac{A_{st}}{A_s}*y_s\)</span></p>
+<p>where <span class="math inline">\(\hat y_t\)</span> is the estimated value for the target polygon, <span class="math inline">\(y_s\)</span> is value for the source polygon, <span class="math inline">\(A_s\)</span> is the area of the source polygon, and <span class="math inline">\(A_{st}\)</span> is the area of the zone of intersection between the source and target zones.</p>
+<p><strong>Note:</strong> This exercise is for illustration purposes only as it is unrealistic to assume a homogenous population distribution by province. For our paper, we apportion at the sub-place level to minimize errors.</p>
+<div id="import-census-population" class="section level3">
+<h3>Import Census population</h3>
+<pre class="r"><code>pop2001&lt;-read_csv(&quot;prov_pop_2001.csv&quot;, skip=6, col_names = c(&quot;PR_CODE01&quot;,&quot;pop_2001&quot;)) 
+pop2011&lt;-read_csv(&quot;prov_pop_2011.csv&quot;, skip=6, col_names = c(&quot;PR_CODE11&quot;,&quot;pop_2011&quot;)) %&gt;%
+  tidyr::separate(&quot;PR_CODE11&quot;,c(&quot;PR_CODE11&quot;,&quot;PR_NAME&quot;), extra=&quot;merge&quot;) %&gt;% #separate code and name
+  mutate(PR_CODE11=as.numeric(PR_CODE11))
+
+head(pop2001,9)</code></pre>
+<pre><code>## # A tibble: 9 x 2
+##   PR_CODE01 pop_2001
+##       &lt;int&gt;    &lt;int&gt;
+## 1         2  6436758
+## 2         4  2706780
+## 3         7  8837177
+## 4         5  9426018
+## 5         9  5273639
+## 6         8  3122991
+## 7         3   822729
+## 8         6  3669350
+## 9         1  4524335</code></pre>
+<pre class="r"><code>head(pop2011,9) </code></pre>
+<pre><code>## # A tibble: 9 x 3
+##   PR_CODE11 PR_NAME       pop_2011
+##       &lt;dbl&gt; &lt;chr&gt;            &lt;int&gt;
+## 1         2 Eastern Cape   6560022
+## 2         4 Free State     2745290
+## 3         7 Gauteng       12271736
+## 4         5 KwaZulu-Natal 10266803
+## 5         9 Limpopo        5404033
+## 6         8 Mpumalanga     4039491
+## 7         6 North West     3509669
+## 8         3 Northern Cape  1145529
+## 9         1 Western Cape   5822327</code></pre>
+<p>Here, I named the province <code>PR_CODE01</code> to match the previous table.</p>
+</div>
+<div id="reapportion-first-merge-then-mutiply-then-collapse" class="section level3">
+<h3>Reapportion: first merge then mutiply then collapse</h3>
+<pre class="r"><code>new_df %&gt;% 
+  inner_join(pop2001) %&gt;% 
+  mutate(pop_2001_new = old_area_share_r*pop_2001) %&gt;% #multiply with rescaled proportions
+  group_by(PR_CODE11) %&gt;% 
+  summarise(pop_2001_new=sum(pop_2001_new)) %&gt;% #collapse
+  ungroup() %&gt;% 
+  inner_join(pop2001,  by = c(&quot;PR_CODE11&quot; = &quot;PR_CODE01&quot;)) %&gt;% #bring in old pop
+  select(PR_CODE11,pop_2001,pop_2001_new) %&gt;% 
+  mutate(change2001=round(pop_2001_new-pop_2001)) %&gt;%
+  inner_join(pop2011) %&gt;% 
+  select(PR_CODE11,PR_NAME, everything()) %&gt;% 
+  kable(.) %&gt;%
+  kable_styling(&quot;striped&quot;, full_width = T)</code></pre>
+<pre><code>## Joining, by = &quot;PR_CODE01&quot;</code></pre>
+<pre><code>## Joining, by = &quot;PR_CODE11&quot;</code></pre>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+PR_CODE11
+</th>
+<th style="text-align:left;">
+PR_NAME
+</th>
+<th style="text-align:right;">
+pop_2001
+</th>
+<th style="text-align:right;">
+pop_2001_new
+</th>
+<th style="text-align:right;">
+change2001
+</th>
+<th style="text-align:right;">
+pop_2011
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Western Cape
+</td>
+<td style="text-align:right;">
+4524335
+</td>
+<td style="text-align:right;">
+4524092
+</td>
+<td style="text-align:right;">
+-243
+</td>
+<td style="text-align:right;">
+5822327
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+Eastern Cape
+</td>
+<td style="text-align:right;">
+6436758
+</td>
+<td style="text-align:right;">
+6489304
+</td>
+<td style="text-align:right;">
+52546
+</td>
+<td style="text-align:right;">
+6560022
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Northern Cape
+</td>
+<td style="text-align:right;">
+822729
+</td>
+<td style="text-align:right;">
+1144766
+</td>
+<td style="text-align:right;">
+322037
+</td>
+<td style="text-align:right;">
+1145529
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+Free State
+</td>
+<td style="text-align:right;">
+2706780
+</td>
+<td style="text-align:right;">
+2709303
+</td>
+<td style="text-align:right;">
+2523
+</td>
+<td style="text-align:right;">
+2745290
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+KwaZulu-Natal
+</td>
+<td style="text-align:right;">
+9426018
+</td>
+<td style="text-align:right;">
+9372784
+</td>
+<td style="text-align:right;">
+-53234
+</td>
+<td style="text-align:right;">
+10266803
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+North West
+</td>
+<td style="text-align:right;">
+3669350
+</td>
+<td style="text-align:right;">
+3310741
+</td>
+<td style="text-align:right;">
+-358609
+</td>
+<td style="text-align:right;">
+3509669
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Gauteng
+</td>
+<td style="text-align:right;">
+8837177
+</td>
+<td style="text-align:right;">
+8869655
+</td>
+<td style="text-align:right;">
+32478
+</td>
+<td style="text-align:right;">
+12271736
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+Mpumalanga
+</td>
+<td style="text-align:right;">
+3122991
+</td>
+<td style="text-align:right;">
+3024030
+</td>
+<td style="text-align:right;">
+-98961
+</td>
+<td style="text-align:right;">
+4039491
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+Limpopo
+</td>
+<td style="text-align:right;">
+5273639
+</td>
+<td style="text-align:right;">
+5374921
+</td>
+<td style="text-align:right;">
+101282
+</td>
+<td style="text-align:right;">
+5404033
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>

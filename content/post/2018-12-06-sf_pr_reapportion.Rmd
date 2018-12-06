@@ -1,0 +1,236 @@
+---
+title: "Reapportion spatial overlaps between South African census boundaries: 2001 and 2011"
+author: "Takwanisa Machemedze"
+date: "2018-12-06"
+output:
+  blogdown::html_page
+---
+
+## Introduction
+
+The [documents](https://www.statssa.gov.za/publications/P03014/P030142011.pdf) accompanying the South African census of 2011 state that demarcations of geographical boundaries underwent a number of changes at provincial and municipal boundaries relative to those used for the 2001 census. This make it difficult to compare the 2011 census and the preceding census at this level. The aim of this exercise is to determine what proportion of the preceding census boundaries are included in the boundaries of the latest census. We can then try to apportion a number of measures from previous census into the new boundaries. In this exercise we use the R statistical package and various add-on packages to derive the proportions. In our case, we use the `sf` package but most of the ideas are derived from [this](http://rstudio-pubs-static.s3.amazonaws.com/6577_3b66f8d8f4984fb2807e91224defa854.html) source that uses the classic approach of the combination of the `sp`, `rgdal` and `rgeos` packages.
+
+## Relevant packages
+
+We use the recently developed `sf` package that combines the capabilities of the `sp\rgdal\rgeos` combination. Among other things, the `sf` package read and write spatial data, provides analysis tools (overlays, etc.) and geometry operations (union, intersections, buffer, etc). `sf` objects also integrates well within the `tidyverse` workflow.
+
+## Load packages and read polygons
+
+```{r, message=FALSE, warning=FALSE}
+library(sf)
+library(tidyverse)
+#Read in old (2001) and new (2011) geographies
+shp01<-st_read(dsn="./PR_SA_2001", layer="PR_SA", quiet = TRUE)
+shp11<-st_read(dsn="./PR_SA_2011", layer="PR_SA_2011", quiet = TRUE)
+```
+
+## Sanity check on coordinate reference systems
+
+### Test whether or not data is projected
+
+```{r}
+st_is_longlat(shp01)
+st_is_longlat(shp11)
+```
+
+Both polygons are not projected, i.e. they are still in longitude/latitude.
+
+### Retrieve projection information
+
+```{r}
+st_crs(shp01)
+st_crs(shp11)
+```
+
+### Projection using a proj.4 string
+
+Here, we use the [projection](https://gist.github.com/gubuntu/6403425) for South Africa as suggested by Tim Sutton and Gavin Fleming.
+
+```{r, message=FALSE, warning=FALSE}
+pro_tm<-"+proj=aea +lat_1=-24 +lat_2=-32 +lat_0=0 +lon_0=24 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+shp01<-st_transform(shp01,pro_tm)
+shp11<-st_transform(shp11,pro_tm)
+
+st_crs(shp01)
+st_crs(shp11)
+```
+
+## Visualise the two polygons
+
+```{r}
+# Create centroid 
+shp11 <- cbind(shp11, st_coordinates(st_centroid(shp11)))
+
+#Plot
+ggplot() + 
+  geom_sf(data = shp01, aes(colour = "Old boundary"), show.legend = "line", fill=NA) +
+  geom_sf(data = shp11, aes(colour = "New boundary"), show.legend = "line", fill=NA) +
+  geom_text(data = shp11, aes(X, Y, label = PR_MDB_C), size = 3) +
+  scale_colour_manual(values = c("Old boundary" = "black", "New boundary" = "red"), name = NULL,
+                      guide = guide_legend(override.aes = list(linetype = c("solid", "solid"), 
+                                                               shape = c(NA, NA)))) +
+  labs(x="",y="")+
+  theme_minimal()+
+  theme(legend.position="bottom")
+```
+
+We can clearly see some of the overlaps.
+
+## Some house keeping
+
+Here I want to add the province abbreviation to the 2001 attributes table to match the PR_MDB_C in 2011 as shown below.
+
+```{r}
+#check the attributes table
+as.data.frame(shp01) %>% head
+as.data.frame(shp11) %>% head
+```
+
+Add new variable to `shp01`
+
+```{r}
+#Add the province abbreviation to the 2001 census attributes table
+shp01$PR_MDB_C[shp01$PR_NAME=="EASTERN CAPE"]<-"EC"
+shp01$PR_MDB_C[shp01$PR_NAME=="FREE STATE"]<-"FS"
+shp01$PR_MDB_C[shp01$PR_NAME=="GAUTENG"]<-"GT"
+shp01$PR_MDB_C[shp01$PR_NAME=="KWAZULU-NATAL"]<-"KZN"
+shp01$PR_MDB_C[shp01$PR_NAME=="LIMPOPO"]<-"LIM"
+shp01$PR_MDB_C[shp01$PR_NAME=="MPUMALANGA"]<-"MP"
+shp01$PR_MDB_C[shp01$PR_NAME=="NORTH WEST"]<-"NW"
+shp01$PR_MDB_C[shp01$PR_NAME=="NORTHERN CAPE"]<-"NC"
+shp01$PR_MDB_C[shp01$PR_NAME=="WESTERN CAPE"]<-"WC"
+```
+
+### Area in square km
+
+```{r, message=FALSE, warning=FALSE}
+#Area
+shp01$area_2001 <-as.numeric(st_area(shp01))/1e6
+shp11$area_2011 <-as.numeric(st_area(shp11))/1e6
+
+#compare 2001 and 2011 side by side
+a01<-as.data.frame(shp01) %>% 
+  select(PR_MDB_C,area_2001)
+
+a11<-as.data.frame(shp11) %>% 
+  select(PR_MDB_C,area_2011) %>% 
+  mutate_if(is.factor, as.character)
+
+a01 %>% 
+  inner_join(a11) %>% head(9)
+```
+
+```{r, echo=FALSE}
+# library(knitr)
+# library(kableExtra)
+# a01 %>% 
+#   inner_join(a11) %>% 
+#   kable(.) %>%
+#   kable_styling("striped", full_width = T)
+```
+
+This matches Table 2.1 [here](https://www.statssa.gov.za/publications/P03014/P030142011.pdf)
+
+## Overlapping area
+
+Here we create a new object, `overlaps`, with IDs and size of overlapping areas.
+
+```{r, message=FALSE, warning=FALSE}
+overlaps <- st_intersection(shp11,shp01)
+#overlapping area
+overlaps$area_i <-as.numeric(st_area(overlaps))/1e6
+```
+
+```{r, message=FALSE, warning=FALSE}
+#sf object to polygon
+st_geometry(overlaps) <- NULL
+#overlap as a proportion of the old area
+overlaps$old_area_share<-overlaps$area_i/overlaps$area_2001
+```
+
+### Check if sum of proportions add up to one
+
+```{r}
+library(knitr)
+library(kableExtra)
+overlaps %>% 
+  group_by(PR_NAME.1) %>% 
+  mutate(sum_old_area_shares = sum(old_area_share)) %>% 
+  summarise(area_sum=max(sum_old_area_shares)) %>% 
+  kable(.) %>%
+  kable_styling("striped", full_width = T)
+```
+
+Clearly, most of the proportions are not exactly one. We can rescale them to sum to one as follows:
+
+### Rescale the old_area_share for each overlap by 1/sum_old_area_shares
+
+```{r, message=FALSE, warning=FALSE}
+overlaps<-overlaps %>% 
+  group_by(PR_NAME.1) %>% 
+  mutate(sum_old_area_shares = sum(old_area_share)) %>% 
+  ungroup() %>% 
+  mutate(old_area_share_r = old_area_share/sum_old_area_shares)
+```
+
+Below is a table with province code, intersect area (area_i) and both raw and re-scaled proportions of intersect.
+
+```{r, message=FALSE, warning=FALSE}
+new_df<-overlaps %>% 
+  select(PR_CODE01=PR_CODE.1, PR_CODE11=PR_CODE, PR_NAME01=PR_MDB_C.1, PR_NAME11 = PR_MDB_C,area_2001,
+         area_2011, area_i, old_area_share,old_area_share_r) %>% 
+  mutate(area_i=round(area_i,2), old_area_share=round(old_area_share,5), 
+         old_area_share_r=round(old_area_share_r,5)) %>% 
+  arrange(PR_NAME11)
+
+
+library(knitr)
+library(kableExtra)
+library(tidyverse)
+new_df %>%
+  kable(.) %>%
+  kable_styling("striped", full_width = T)
+```
+
+## Reapportion
+
+Below, we reapportion the 2001 provincial population based on the proportions derived above. The apportion assume a spatial uniform distribution of the population and can be expressed as follows:
+
+$\hat y_t = \sum \frac{A_{st}}{A_s}*y_s$
+
+where $\hat y_t$ is the estimated value for the target polygon, $y_s$ is value for the source polygon, $A_s$ is the area of the source polygon, and $A_{st}$ is the area of the zone of intersection between the source and target zones.
+
+**Note:** This exercise is for illustration purposes only as it is unrealistic to assume a homogenous population distribution by province. For our paper, we apportion at the sub-place level to minimize errors.
+
+
+### Import Census population
+
+```{r, message=FALSE, warning=FALSE}
+pop2001<-read_csv("prov_pop_2001.csv", skip=6, col_names = c("PR_CODE01","pop_2001")) 
+pop2011<-read_csv("prov_pop_2011.csv", skip=6, col_names = c("PR_CODE11","pop_2011")) %>%
+  tidyr::separate("PR_CODE11",c("PR_CODE11","PR_NAME"), extra="merge") %>% #separate code and name
+  mutate(PR_CODE11=as.numeric(PR_CODE11))
+
+head(pop2001,9)
+head(pop2011,9) 
+```
+
+Here, I named the province `PR_CODE01` to match the previous table.
+
+### Reapportion: first merge then mutiply then collapse
+
+```{r}
+new_df %>% 
+  inner_join(pop2001) %>% 
+  mutate(pop_2001_new = old_area_share_r*pop_2001) %>% #multiply with rescaled proportions
+  group_by(PR_CODE11) %>% 
+  summarise(pop_2001_new=sum(pop_2001_new)) %>% #collapse
+  ungroup() %>% 
+  inner_join(pop2001,  by = c("PR_CODE11" = "PR_CODE01")) %>% #bring in old pop
+  select(PR_CODE11,pop_2001,pop_2001_new) %>% 
+  mutate(change2001=round(pop_2001_new-pop_2001)) %>%
+  inner_join(pop2011) %>% 
+  select(PR_CODE11,PR_NAME, everything()) %>% 
+  kable(.) %>%
+  kable_styling("striped", full_width = T)
+```
