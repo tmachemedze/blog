@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on Data stories</title>
+    <title>Posts on diaRy</title>
     <link>/post/</link>
-    <description>Recent content in Posts on Data stories</description>
+    <description>Recent content in Posts on diaRy</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018. All rights reserved.</copyright>
@@ -29,15 +29,6 @@
       <guid>/2017/03/24/stata-to-r---bmi-example/</guid>
       <description>Note: This exercise is part of re-writing the SALDRU Stata course in R for DataFirst.Therefore, all descriptions, interpretation and logical approach comes from the original course and all I did is to write the R code.
 IntroductionIn this exercise, we follow the BMI examples in the SALDRU Stata course. The exercise investigate determinants of BMI and in doing so address the following questions. What happens to your BMI as you get older?</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>/1/01/01/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/1/01/01/</guid>
-      <description>Provincecode{white-space: pre;}pre:not([class]) {background-color: white;}if (window.hljs) {hljs.configure({languages: []});hljs.initHighlightingOnLoad();if (document.readyState &amp;&amp; document.readyState === &#34;complete&#34;) {window.setTimeout(function() { hljs.initHighlighting(); }, 0);}}h1 {font-size: 34px;}h1.title {font-size: 38px;}h2 {font-size: 30px;}h3 {font-size: 24px;}h4 {font-size: 18px;}h5 {font-size: 16px;}h6 {font-size: 12px;}.</description>
     </item>
     
   </channel>
