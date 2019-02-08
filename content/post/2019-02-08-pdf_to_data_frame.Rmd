@@ -1,0 +1,123 @@
+---
+title: "PDF table to data.frame"
+author: "Takwanisa Machemedze"
+date: "2019-02-08"
+output:
+  blogdown::html_page
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+I recently found myself needing to extract some tables from PDF format to some tabular format that I can manipulate in `R`. I needed to extract municipal population and GDP estimates from a [document](http://www.statssa.gov.za/publications/D9129/D91292012.pdf) published by Statistics South Africa. Fortunately, the `tabulizer` package in R makes this task easier. The `tabulizer` package also depends on the `rJava` and `tabulizerjars` packages. I will start by loading these together with the `tidyverse` packages for data manipulation.
+
+```{r, message=FALSE, warning=FALSE}
+# load packages
+library(rJava) # load and attach 'rJava' now
+library(tabulizer)
+library(tabulizerjars)
+library(tidyverse)
+```
+
+In my learning process, I started with a simple table like Table 7.1 from the [document](http://www.statssa.gov.za/publications/D9129/D91292012.pdf). 
+
+```{r tab1, echo=FALSE, fig.cap="Preview of Table 7.1", out.width = '100%'}
+knitr::include_graphics("table1.png")
+```
+
+I will start by specifying the PDF file location or path.  
+
+```{r}
+# Location of pdf file
+file <- "http://www.statssa.gov.za/publications/D9129/D91292012.pdf"
+```
+
+The main function from the `tabulizer` package is `extract_tables`. It has several options to specify but in my case I need to specify the page number for Table 7.1 in addition to the `file`.
+
+```{r}
+# Extract the table
+zipf_df <- extract_tables(file, pages = 21)
+
+#to data frame
+zipf_df<-as.data.frame(zipf_df[[1]])
+
+#Check
+head(zipf_df)
+```
+The column names are in the first row and we need to correct this.
+
+```{r}
+#first row to colnames
+colnames(zipf_df) <- as.character(unlist(zipf_df[1,]))
+
+#drop first row
+zipf_df = zipf_df[-1, ] 
+#check
+head(tbl_df(zipf_df),15)
+```
+
+The main task is done and I can then format table headers, etc.
+
+
+Now I have an idea of how the package works and I want to extract tables from Appendices 1, 2 and 5. 
+
+```{r tab2, echo=FALSE, fig.cap="Preview of Appendix 1", out.width = '100%'}
+knitr::include_graphics("table2.png")
+```
+
+These tables are slightly different to the one extracted above as they overlap many pages and wrapped header text is read as separate lines. If I repeat the above R code:
+
+```{r}
+# Extract the table
+app1_df <- extract_tables(file, pages = 32)
+
+#to data frame
+app1_df<-as.data.frame(app1_df[[1]])
+head(app1_df)
+```
+
+The wrapped text is included in rows 1 to 4 and columns names not correct. We can correct this as follows:
+
+```{r}
+names(app1_df)<-c("MN_NAME","pop2013","pop2013adj","emp2013","emp2013adj","unemp2013","unemp2013adj", "GDPM2011","blank","GDPM2011adj")
+app1_df<-app1_df[-c(1:4),] 
+
+app1_df
+```
+
+At least it is not difficult to tidy this table, i.e., remove first four rows and assigning header names. To extract the full table, I will have to loop the above code and append pages 32 top 40 as follows:
+
+```{r}
+muni_df<-data.frame() #empty data. frame
+
+for(i in 32:40) {
+  temp_df <- extract_tables(file, pages = i)
+  temp_df<-as.data.frame(temp_df[[1]]) 
+  
+  names(temp_df)<-c("MN_NAME","pop2013","pop2013adj","emp2013","emp2013adj","unemp2013","unemp2013adj", "GDPM2011","blank","GDPM2011adj")
+  temp_df<-temp_df[-c(1:4),]
+  
+  muni_df<-rbind(muni_df,temp_df)
+}
+
+#remove commas in numbers and make them numeric
+muni_df[2:10]=sapply(muni_df[2:10],function(x) gsub(",","",x))
+
+muni_df<-muni_df %>% 
+  mutate_if(is.character, as.numeric) %>% #character numbers to numeric
+  mutate_if(is.factor,as.character) %>% #factor municipality names to character
+  select(-blank)  #drop empty column
+
+str(muni_df)
+```
+
+And boom, we have data for all 234 municipalites. I can do the same for appendices 2 (pages 41:49) and 5 (pages 69:77). Finally I save the extracted table to csv for future use. 
+
+```{r}
+write.table(muni_df, file = "./mn_pop_gdp.csv", sep = ",", row.names = FALSE, qmethod = "double")
+```
+
+*Note*: The above was enough to solve my problem but the `tabulizer` has many other options and specifications. For example,  I left the package to `guess` the table location but you can as well use `locate_areas` to your liking. 

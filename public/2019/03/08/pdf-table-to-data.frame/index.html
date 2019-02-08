@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="generator" content="Hugo 0.47" />
+
+  <title>PDF table to data.frame &middot; diaRy</title>
+
+  
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/pure-min.css">
+
+  <!--[if lte IE 8]>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/grids-responsive-old-ie-min.css">
+  <![endif]-->
+  <!--[if gt IE 8]><!-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pure/1.0.0/grids-responsive-min.css">
+  <!--<![endif]-->
+
+  <!--[if lte IE 8]>
+  <link rel="stylesheet" href="/css/side-menu-old-ie.css">
+  <![endif]-->
+  <!--[if gt IE 8]><!-->
+  <link rel="stylesheet" href="/css/side-menu.css">
+  <!--<![endif]-->
+
+  <link rel="stylesheet" href="/css/blackburn.css">
+
+  
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  
+  <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet" type="text/css">
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+ 
+  
+
+  
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/androidstudio.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+  
+  <script>hljs.initHighlightingOnLoad();</script>
+  
+
+  <link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
+
+  
+  
+
+</head>
+
+
+<body>
+<div id="layout">
+
+  
+<a href="#menu" id="menuLink" class="menu-link">
+  
+  <span></span>
+</a>
+<div id="menu">
+
+  
+  <a class="pure-menu-heading brand" href="/">Takwanisa</a>
+
+
+  <div class="pure-menu">
+    <ul class="pure-menu-list">
+      
+      
+        <li class="pure-menu-item">
+          <a class="pure-menu-link" href="/"><i class='fa fa-home fa-fw'></i>Home</a>
+      
+        </li>
+      
+      
+        <li class="pure-menu-item">
+          <a class="pure-menu-link" href="/post/"><i class='fa fa-list fa-fw'></i>Posts</a>
+      
+        </li>
+      
+      
+        <li class="pure-menu-item">
+          <a class="pure-menu-link" href="/about/"><i class='fa fa-user fa-fw'></i>About</a>
+      
+        </li>
+      
+    </ul>
+  </div>
+
+  <div class="pure-menu social">
+  <ul class="pure-menu-list">
+
+    
+
+    
+
+    
+    <li class="pure-menu-item">
+      <a class="pure-menu-link" href="https://twitter.com/Takwanisa" target="_blank"><i class="fa fa-twitter-square fa-fw"></i>Twitter</a>
+    </li>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <li class="pure-menu-item">
+      <a class="pure-menu-link" href="https://github.com/tmachemedze" target="_blank"><i class="fa fa-github-square fa-fw"></i>GitHub</a>
+    </li>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+  </ul>
+</div>
+
+
+  <div>
+  <div class="small-print">
+    <small>&copy; 2018. All rights reserved.</small>
+  </div>
+  <div class="small-print">
+    <small>Built with&nbsp;<a href="https://gohugo.io/" target="_blank">Hugo</a></small>
+    <small>Theme&nbsp;<a href="https://github.com/yoshiharuyamashita/blackburn" target="_blank">Blackburn</a></small>
+  </div>
+</div>
+
+</div>
+
+
+  <div id="main">
+
+
+<div class="header">
+  <h1>PDF table to data.frame</h1>
+  <h2></h2>
+</div>
+<div class="content">
+
+  <div class="post-meta">
+
+  <div>
+    <i class="fa fa-calendar fa-fw"></i>
+    <time>08 Mar 2019, 00:00</time>
+  </div>
+
+  
+
+  
+
+  
+
+</div>
+
+  <div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I recently found myself needing to extract some tables from PDF format to some tabular format that I can manipulate in <code>R</code>. I needed to extract municipal population and GDP estimates from a <a href="http://www.statssa.gov.za/publications/D9129/D91292012.pdf">document</a> published by Statistics South Africa. Fortunately, the <code>tabulizer</code> package in R makes this task easier. The <code>tabulizer</code> package also depends on the <code>rJava</code> and <code>tabulizerjars</code> packages. I will start by loading these together with the <code>tidyverse</code> packages for data manipulation.</p>
+<pre class="r"><code># load packages
+library(rJava) # load and attach &#39;rJava&#39; now
+library(tabulizer)
+library(tabulizerjars)
+library(tidyverse)</code></pre>
+<p>In my learning process, I started with a simple table like Table 7.1 from the <a href="http://www.statssa.gov.za/publications/D9129/D91292012.pdf">document</a>.</p>
+<div class="figure"><span id="fig:tab1"></span>
+<img src="table1.PNG" alt="Preview of Table 7.1" width="100%" />
+<p class="caption">
+Figure 1: Preview of Table 7.1
+</p>
+</div>
+<p>I will start by specifying the PDF file location or path.</p>
+<pre class="r"><code># Location of pdf file
+file &lt;- &quot;http://www.statssa.gov.za/publications/D9129/D91292012.pdf&quot;</code></pre>
+<p>The main function from the <code>tabulizer</code> package is <code>extract_tables</code>. It has several options to specify but in my case I need to specify the page number for Table 7.1 in addition to the <code>file</code>.</p>
+<pre class="r"><code># Extract the table
+zipf_df &lt;- extract_tables(file, pages = 21)
+
+#to data frame
+zipf_df&lt;-as.data.frame(zipf_df[[1]])
+
+#Check
+head(zipf_df)</code></pre>
+<pre><code>##                          V1  V2        V3           V4
+## 1                  Variable  Î± t-\rvalue R2\radjusted
+## 2        Population 2007 CS 1.1     39.79         0.87
+## 3 Population 2008 simulated 1.1     40.16         0.87
+## 4 Population 2009 simulated 1.1     40.05         0.87
+## 5 Population 2010 simulated 1.1      39.9         0.87
+## 6    Population 2011 Census 1.1     40.16         0.87
+##                              V5
+## 1 Standard\rErrorof\rRegression
+## 2                          0.41
+## 3                           0.4
+## 4                           0.4
+## 5                          0.41
+## 6                          0.39</code></pre>
+<p>The column names are in the first row and we need to correct this.</p>
+<pre class="r"><code>#first row to colnames
+colnames(zipf_df) &lt;- as.character(unlist(zipf_df[1,]))
+
+#drop first row
+zipf_df = zipf_df[-1, ] 
+#check
+head(tbl_df(zipf_df),15)</code></pre>
+<pre><code>## # A tibble: 15 x 5
+##    Variable         `Î±`  `t-\rvalue` `R2\radjusted` `Standard\rErrorof\rR~
+##    &lt;fct&gt;            &lt;fct&gt; &lt;fct&gt;       &lt;fct&gt;          &lt;fct&gt;                 
+##  1 Population 2007~ 1.1   39.79       0.87           0.41                  
+##  2 Population 2008~ 1.1   40.16       0.87           0.4                   
+##  3 Population 2009~ 1.1   40.05       0.87           0.4                   
+##  4 Population 2010~ 1.1   39.9        0.87           0.41                  
+##  5 Population 2011~ 1.1   40.16       0.87           0.39                  
+##  6 Population 2013~ 1.1   40.14       0.87           0.39                  
+##  7 Employment 2007~ 1,2   50,88       0,92           0,34                  
+##  8 Employment 2008~ 1,2   51,16       0,92           0,33                  
+##  9 Employment 2009~ 1,2   50,44       0,92           0,34                  
+## 10 Employment 2010~ 1,2   49,87       0,91           0,34                  
+## 11 Employment 2011~ 1,2   62,87       0,94           0,27                  
+## 12 Employment 2012~ 1,1   59,20       0,94           0,28                  
+## 13 Unemployment 20~ 1.2   42.35       0.88           0.42                  
+## 14 Unemployment 20~ 1.2   45.16       0.9            0.39                  
+## 15 Unemployment 20~ 1.2   49.33       0.91           0.36</code></pre>
+<p>The main task is done and I can then format table headers, etc.</p>
+<p>Now I have an idea of how the package works and I want to extract tables from Appendices 1, 2 and 5.</p>
+<div class="figure"><span id="fig:tab2"></span>
+<img src="table2.PNG" alt="Preview of Appendix 1" width="100%" />
+<p class="caption">
+Figure 2: Preview of Appendix 1
+</p>
+</div>
+<p>These tables are slightly different to the one extracted above as they overlap many pages and wrapped header text is read as separate lines. If I repeat the above R code:</p>
+<pre class="r"><code># Extract the table
+app1_df &lt;- extract_tables(file, pages = 32)
+
+#to data frame
+app1_df&lt;-as.data.frame(app1_df[[1]])
+head(app1_df)</code></pre>
+<pre><code>##                   V1         V2           V3         V4           V5
+## 1                               Provincially            Provincially
+## 2                                   adjusted                adjusted
+## 3                    Population   population Employment   employment
+## 4 Local municipality       2013         2013       2013         2013
+## 5 Nelson Mandela Bay  1,179,075    1,162,306    296,720      355,586
+## 6       Buffalo City    772,872      761,880    189,406      226,982
+##             V6           V7             V8 V9             V10
+## 1              Provincially                                  
+## 2                  adjusted                      Provincially
+## 3 Unemployment unemployment      GDPM 2011      adjusted GDPM
+## 4         2012         2012         (Rand)        2011 (Rand)
+## 5      134,553      145,546 98,415,938,316    110,431,059,424
+## 6       80,467       87,041 46,637,831,321     52,331,616,303</code></pre>
+<p>The wrapped text is included in rows 1 to 4 and columns names not correct. We can correct this as follows:</p>
+<pre class="r"><code>names(app1_df)&lt;-c(&quot;MN_NAME&quot;,&quot;pop2013&quot;,&quot;pop2013adj&quot;,&quot;emp2013&quot;,&quot;emp2013adj&quot;,&quot;unemp2013&quot;,&quot;unemp2013adj&quot;, &quot;GDPM2011&quot;,&quot;blank&quot;,&quot;GDPM2011adj&quot;)
+app1_df&lt;-app1_df[-c(1:4),] 
+
+app1_df</code></pre>
+<pre><code>##                   MN_NAME   pop2013 pop2013adj emp2013 emp2013adj
+## 5      Nelson Mandela Bay 1,179,075  1,162,306 296,720    355,586
+## 6            Buffalo City   772,872    761,880 189,406    226,982
+## 7  King Sabata Dalindyebo   462,280    455,706  60,315     72,280
+## 8                   Kouga   100,864     99,430  30,845     36,965
+## 9                 Lukanji   195,186    192,410  34,412     41,239
+## 10                 Makana    82,271     81,101  19,669     23,571
+## 11                Ndlambe    62,608     61,717  15,528     18,608
+## 12       Blue Crane Route    36,844     36,320   7,602      9,110
+## 13              Maletswai    44,825     44,187  10,888     13,048
+## 14        Inxuba Yethemba    67,094     66,140  17,216     20,631
+## 15               Camdeboo    52,186     51,444  12,573     15,068
+## 16              Matatiele   208,613    205,646  24,710     29,612
+## 17   Sundays River Valley    55,779     54,986  16,449     19,712
+## 18                 Gariep    34,465     33,975   8,424     10,096
+## 19               Elundini   141,374    139,363  14,528     17,411
+## 20               Nkonkobe   130,090    128,239  14,593     17,488
+## 21              Amahlathi   125,651    123,864  17,689     21,199
+## 22                  Senqu   137,289    135,337  18,665     22,368
+## 23              Kou-Kamma    41,615     41,023  15,269     18,298
+## 24                  Nxuba    24,832     24,479   4,893      5,864
+## 25              Great Kei    39,903     39,336   6,829      8,184
+## 26                 Mnquma   258,296    254,623  24,503     29,364
+## 27            Ngquza Hill   284,997    280,944  18,943     22,701
+## 28                Mbizana   288,502    284,399  19,776     23,699
+## 29              Umzimvubu   196,104    193,315  18,830     22,565
+## 30             Emalahleni   122,255    120,517   9,555     11,451
+##    unemp2013 unemp2013adj       GDPM2011 blank     GDPM2011adj
+## 5    134,553      145,546 98,415,938,316       110,431,059,424
+## 6     80,467       87,041 46,637,831,321        52,331,616,303
+## 7     29,446       31,852  8,485,608,569         9,521,575,064
+## 8      6,637        7,179  7,243,315,091         8,127,616,044
+## 9     15,780       17,069  4,678,097,984         5,249,224,113
+## 10     7,451        8,059  4,387,916,732         4,923,616,049
+## 11     5,305        5,738  2,804,925,413         3,147,365,053
+## 12     2,655        2,872  1,951,467,829         2,189,713,002
+## 13     3,119        3,374  1,951,031,400         2,189,223,293
+## 14     4,680        5,062  1,928,577,159         2,164,027,722
+## 15     4,262        4,610  1,855,300,828         2,081,805,442
+## 16    12,265       13,267  1,254,120,689         1,407,230,157
+## 17     2,289        2,476  1,196,162,995         1,342,196,692
+## 18     2,300        2,487  1,054,127,368         1,182,820,629
+## 19     9,111        9,855    971,969,719         1,090,632,754
+## 20    10,644       11,514    967,823,649         1,085,980,511
+## 21     7,847        8,488    952,461,369         1,068,742,725
+## 22     8,076        8,736    736,145,626           826,018,049
+## 23     2,128        2,302    714,149,634           801,336,674
+## 24     2,793        3,021    582,195,503           653,272,908
+## 25     2,280        2,467    568,840,794           638,287,787
+## 26    15,298       16,548    511,123,136           573,523,663
+## 27    15,865       17,161    493,033,179           553,225,191
+## 28    12,042       13,026    490,087,287           549,919,649
+## 29    12,580       13,608    441,163,662           495,023,178
+## 30     6,493        7,024    406,423,960           456,042,276</code></pre>
+<p>At least it is not difficult to tidy this table, i.e., remove first four rows and assigning header names. To extract the full table, I will have to loop the above code and append pages 32 top 40 as follows:</p>
+<pre class="r"><code>muni_df&lt;-data.frame() #empty data. frame
+
+for(i in 32:40) {
+  temp_df &lt;- extract_tables(file, pages = i)
+  temp_df&lt;-as.data.frame(temp_df[[1]]) 
+  
+  names(temp_df)&lt;-c(&quot;MN_NAME&quot;,&quot;pop2013&quot;,&quot;pop2013adj&quot;,&quot;emp2013&quot;,&quot;emp2013adj&quot;,&quot;unemp2013&quot;,&quot;unemp2013adj&quot;, &quot;GDPM2011&quot;,&quot;blank&quot;,&quot;GDPM2011adj&quot;)
+  temp_df&lt;-temp_df[-c(1:4),]
+  
+  muni_df&lt;-rbind(muni_df,temp_df)
+}
+
+#remove commas in numbers and make them numeric
+muni_df[2:10]=sapply(muni_df[2:10],function(x) gsub(&quot;,&quot;,&quot;&quot;,x))
+
+muni_df&lt;-muni_df %&gt;% 
+  mutate_if(is.character, as.numeric) %&gt;% #character numbers to numeric
+  mutate_if(is.factor,as.character) %&gt;% #factor municipality names to character
+  select(-blank)  #drop empty column
+
+str(muni_df)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    234 obs. of  9 variables:
+##  $ MN_NAME     : chr  &quot;Nelson Mandela Bay&quot; &quot;Buffalo City&quot; &quot;King Sabata Dalindyebo&quot; &quot;Kouga&quot; ...
+##  $ pop2013     : num  1179075 772872 462280 100864 195186 ...
+##  $ pop2013adj  : num  1162306 761880 455706 99430 192410 ...
+##  $ emp2013     : num  296720 189406 60315 30845 34412 ...
+##  $ emp2013adj  : num  355586 226982 72280 36965 41239 ...
+##  $ unemp2013   : num  134553 80467 29446 6637 15780 ...
+##  $ unemp2013adj: num  145546 87041 31852 7179 17069 ...
+##  $ GDPM2011    : num  9.84e+10 4.66e+10 8.49e+09 7.24e+09 4.68e+09 ...
+##  $ GDPM2011adj : num  1.10e+11 5.23e+10 9.52e+09 8.13e+09 5.25e+09 ...</code></pre>
+<p>And boom, we have data for all 234 municipalites. I can do the same for appendices 2 (pages 41:49) and 5 (pages 69:77). Finally I save the extracted table to csv for future use.</p>
+<pre class="r"><code>write.table(muni_df, file = &quot;./mn_pop_gdp.csv&quot;, sep = &quot;,&quot;, row.names = FALSE, qmethod = &quot;double&quot;)</code></pre>
+<p><em>Note</em>: The above was enough to solve my problem but the <code>tabulizer</code> has many other options and specifications. For example, I left the package to <code>guess</code> the table location but you can as well use <code>locate_areas</code> to your liking.</p>
+</div>
+
+
+  
+<div class="prev-next-post pure-g">
+  <div class="pure-u-1-24" style="text-align: left;">
+    
+    <a href="/2018/12/06/reapportion-spatial-overlaps-between-south-african-census-boundaries-2001-and-2011/"><i class="fa fa-chevron-left"></i></a>
+    
+  </div>
+  <div class="pure-u-10-24">
+    
+    <nav class="prev">
+      <a href="/2018/12/06/reapportion-spatial-overlaps-between-south-african-census-boundaries-2001-and-2011/">Reapportion spatial overlaps between South African census boundaries: 2001 and 2011</a>
+    </nav>
+    
+  </div>
+  <div class="pure-u-2-24">
+    &nbsp;
+  </div>
+  <div class="pure-u-10-24">
+    
+  </div>
+  <div class="pure-u-1-24" style="text-align: right;">
+    
+  </div>
+</div>
+
+
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://larnsce.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+</div>
+
+</div>
+</div>
+<script src="/js/ui.js"></script>
+
+
+
+
+
+
+</body>
+</html>
+
