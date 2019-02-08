@@ -7,17 +7,17 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 08 Feb 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 09 Feb 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>PDF table to data.frame</title>
-      <link>/2019/02/08/pdf-table-to-data.frame/</link>
-      <pubDate>Fri, 08 Feb 2019 00:00:00 +0000</pubDate>
+      <link>/2019/02/09/pdf-table-to-data.frame/</link>
+      <pubDate>Sat, 09 Feb 2019 00:00:00 +0000</pubDate>
       
-      <guid>/2019/02/08/pdf-table-to-data.frame/</guid>
+      <guid>/2019/02/09/pdf-table-to-data.frame/</guid>
       <description>IntroductionI recently found myself needing to extract some tables from PDF format to some tabular format that I can manipulate in R. I needed to extract municipal population and GDP estimates from a document published by Statistics South Africa. Fortunately, the tabulizer package in R makes this task easier. The tabulizer package also depends on the rJava and tabulizerjars packages. I will start by loading these together with the tidyverse packages for data manipulation.</description>
     </item>
     
