@@ -411,7 +411,7 @@ str(muni_df)</code></pre>
 ##  $ GDPM2011adj : num  1.10e+11 5.23e+10 9.52e+09 8.13e+09 5.25e+09 ...</code></pre>
 <p>And boom, we have data for all 234 municipalites. I can do the same for appendices 2 (pages 41:49) and 5 (pages 69:77). Finally I save the extracted table to csv for future use.</p>
 <pre class="r"><code>write.table(muni_df, file = &quot;./mn_pop_gdp.csv&quot;, sep = &quot;,&quot;, row.names = FALSE, qmethod = &quot;double&quot;)</code></pre>
-<p><em>Note</em>: The above was enough to solve my problem but the <code>tabulizer</code> has many other options and specifications. For example, I left the package to <code>guess</code> the table location but you can as well use <code>locate_areas</code> to your liking.</p>
+<p><strong>Note</strong>: The above was enough to solve my problem but the <code>tabulizer</code> has many other options and specifications. For example, I left the package to <code>guess</code> the table location but you can as well use <code>locate_areas</code> to your liking.</p>
 </div>
 
 

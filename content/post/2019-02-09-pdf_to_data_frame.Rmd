@@ -120,4 +120,4 @@ And boom, we have data for all 234 municipalites. I can do the same for appendic
 write.table(muni_df, file = "./mn_pop_gdp.csv", sep = ",", row.names = FALSE, qmethod = "double")
 ```
 
-*Note*: The above was enough to solve my problem but the `tabulizer` has many other options and specifications. For example,  I left the package to `guess` the table location but you can as well use `locate_areas` to your liking. 
+**Note**: The above was enough to solve my problem but the `tabulizer` has many other options and specifications. For example,  I left the package to `guess` the table location but you can as well use `locate_areas` to your liking. 
